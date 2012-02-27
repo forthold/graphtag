@@ -6,4 +6,3 @@
                            [twitter-api "0.6.4"]
                            [clojurewerkz/quartzite "1.0.0-beta1"]]
             :main forthold.graphtag.server)
-
