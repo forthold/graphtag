@@ -78,6 +78,8 @@
      )
   )
 
+(defn mentionsHandler22 [value] 
+        (println "asdfsadfasdfa" value))
 
 (defrecord JobA []
   org.quartz.Job
@@ -88,11 +90,18 @@
 ;    (println (show-friends :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:screen-name "graphtag"}))
         
 ;    (println (home-timeline :oauth-creds *creds* :params {:trim_user "false"} ))
-     (dbg  (mentions :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:trim_user "false"} ))
+;     (dbg  (mentions :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:trim_user "false"} ))
        (let [ result (mentions :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:trim_user "false"} )] 
          ;convert vector to map of maps keyed on mention id
+;         (println "*******************wwqqw*" result )
          (println "********************"(:text (nth result 0)))
-         (mentionsMapHandler((#(zipmap (map :id %) %) result)))
+         (mentionsMapHandler(#(zipmap (map :id %) %) result))
+         ;(let [idv (map vector (iterate inc 0) result)]
+         ;  (dbg idv)  
+         ;(doseq [[value] result] (mentionsHandler22 value))
+         (doseq [value (seq result)] (mentionsHandler22 value))
+         (println "are we gettigng here")
+         (doseq [value (seq result)] (println "1111111"  value))
          ;(println "********************2"(nth result 0))
          )
  
