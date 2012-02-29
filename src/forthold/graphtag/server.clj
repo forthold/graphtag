@@ -4,22 +4,38 @@
          [twitter.callbacks]
          [twitter.callbacks.handlers]
          [twitter.api.restful]
+         [clojure.set :only [subset?]]
+         [clojure.pprint :only [pprint]]
          [clojure.string :only (replace-first)])
-  (:require [noir.server :as server]
+  (:require; [noir.server :as server]
             [clojurewerkz.quartzite.scheduler :as sched]
             [clojurewerkz.quartzite.jobs      :as j]
             [clojurewerkz.quartzite.triggers  :as t]
             [clojurewerkz.quartzite.schedule.simple :as s]
             [clojurewerkz.quartzite.schedule.calendar-interval :as calin]
-            )           
+            [clojurewerkz.neocons.rest               :as neorest]
+            [clojurewerkz.neocons.rest.nodes         :as nodes]
+            [clojurewerkz.neocons.rest.relationships :as relationships]
+            [clojurewerkz.neocons.rest.paths         :as paths]
+            [clojurewerkz.neocons.rest.cypher        :as cypher]
+            [slingshot.slingshot :as slingshot]
+            [clj-http.client   :as http]
+            )
   (:import [java.util.concurrent CountDownLatch]
            [org.quartz.impl.matchers GroupMatcher]
-           (twitter.callbacks.protocols SyncSingleCallback)))
+            (twitter.callbacks.protocols SyncSingleCallback)
+           [slingshot ExceptionInfo]))
 
-(server/load-views "src/forthold/graphtag/views/")
+;(server/load-views "src/forthold/graphtag/views/")
+;;debugging parts of expressions
+(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
 (sched/initialize)
 (sched/start)
+
+;(def endpoint (neorest/connect! "http://localhost:7474/db/data/"))
+
+;(neorest/connect! "http://localhost:7474/db/data/")
 
 (def ^:dynamic *creds* (make-oauth-creds "GkqZgjg4QikY4lBt1G1A9A"
                          "TOCOK6S2w3ytKIZ8gi3iZ8RFewU5tA7kYebhiToxE2U" 
@@ -58,11 +74,24 @@
 ;                    (twitter/update-status "posting from #clojure with #oauth"))
 ;
 ; 
-;;debugging parts of expressions
-(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 ;; Find out who follows dons
-    (dbg (show-friends :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:screen-name "graphtag"}))
- 
+;    (dbg (show-friends :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:screen-name "graphtag"}))
+
+(neorest/connect! "http://localhost:7474/db/data/")
+
+
+;;
+;; Connections/Discovery
+;;
+
+(defn test-connection-and-discovery-using-connect-with-string-uri []
+  (let [endpoint (neorest/connect "http://localhost:7474/db/data/")]
+    (println endpoint)
+    (println (:version endpoint))
+    ))
+
+;(neorest/connect "http://localhost:7474/db/data/")
+
 (defn mentionHandler [mentions] 
    (let [men_text (replace-first (:text (nth mentions 0)) #"@graphtag" "")]
       (println "adsfsdfasdfads" men_text) 
@@ -78,13 +107,33 @@
      )
   )
 
+;(defn GET
+;  [^String uri & { :as options }]
+;  (io!
+;   (http/get uri (merge options { :accept :json }))))
+(defn test-if-in-index [index mentionid] 
+    (let [ids (set (map :id (nodes/find index :mentionid mentionid)))]
+         (dbg ids))    
+  )
+;
 (defn mentionsHandler22 [value] 
-        (println "asdfsadfasdfa" value))
+  ;(let [ urlNeo (GET "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" )]
+    ;(println urlNeo ))
+  ;(let [endpoint (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/") ]
+   (println "***** In Mentions Handler: mention = " value)
+   (println "asdfsaf9")
+
+   (test-if-in-index "node-index-mention-id" (:id value))
+;   (let [created-node (nodes/create)]
+;      (println "node**"  (:id created-node) ))
+;    ;    (println "asd33" (:version  endpoint))
+;    ;    (dbg endpoint))
+     )
 
 (defrecord JobA []
   org.quartz.Job
   (execute [this ctx]
-    (println "aran")
+    (println "**** Job Executing")
    ;get followers
     ;(println (show-followers :oauth-creds *creds* :params {:screen-name "graphtag"}))
 ;    (println (show-friends :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:screen-name "graphtag"}))
@@ -94,14 +143,14 @@
        (let [ result (mentions :oauth-creds *creds* :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) :params {:trim_user "false"} )] 
          ;convert vector to map of maps keyed on mention id
 ;         (println "*******************wwqqw*" result )
-         (println "********************"(:text (nth result 0)))
-         (mentionsMapHandler(#(zipmap (map :id %) %) result))
+         ;(println "********************"(:text (nth result 0)))
+         ;(mentionsMapHandler(#(zipmap (map :id %) %) result))
          ;(let [idv (map vector (iterate inc 0) result)]
          ;  (dbg idv)  
          ;(doseq [[value] result] (mentionsHandler22 value))
          (doseq [value (seq result)] (mentionsHandler22 value))
-         (println "are we gettigng here")
-         (doseq [value (seq result)] (println "1111111"  value))
+         ;(println "are we gettigng here")
+         ;(doseq [value (seq result)] (println "1111111"  value))
          ;(println "********************2"(nth result 0))
          )
  
@@ -128,11 +177,18 @@
 
 
 (defn -main [& m]
-  (let [mode (keyword (or (first m) :dev))
-        port (Integer. (get (System/getenv) "PORT" "8080"))]
-    (server/start port {:mode mode
-                        :ns 'forthold.graphtag}))
-  (println "Hello World")
+;  (let [mode (keyword (or (first m) :dev))
+;        port (Integer. (get (System/getenv) "PORT" "8080"))]
+;    (server/start port {:mode mode
+;                        :ns 'forthold.graphtag}))
+  (println "Welcome to Graphtag")
+
+  ;;Neo4j config
+  (test-connection-and-discovery-using-connect-with-string-uri)
+  
+  (let [name "node-index-mention-id"]
+    (nodes/create-index name))
+
   (let [job     (j/build
                  (j/of-type forthold.graphtag.server.JobA)
                  (j/with-identity "job1" "tests"))
