@@ -75,13 +75,9 @@
   (let [user (get mention :user) ]
     (dbg user) 
     (:screen_name user)))
-;   (let [user (select-keys mention :user)]
-;     (dbg user)
-;     (:screen_name user)))
 ;
 (defn new-mention [mention]
-  (println "In new:")  
-  (println "In new mention" (get-mention-text mention)  (get-username mention))
+  (println "In new mention" )
     ;;; Create new node for mention
     (let [text (get-mention-text mention) 
           username (get-username mention)
@@ -93,10 +89,44 @@
         ;;; create relationship to user root node
       )
   )
+
+(defn get-user-id [mention]
+  (let [user (get mention :user) ]
+    (:id user)))
+
+(defn get-user-icon [mention]
+  (let [user (get mention :user) ]
+    (:profile_image_url user)))
+
+(defn get-user-bg [mention]
+  (let [user (get mention :user) ]
+    (:profile_background_image_url user)))
+
+(defn new-user [mention]
+  (println "In new user" )
+    ;;; Create new user node to link mention to
+    (let [username (get-username mention)
+          id (get-user-id mention)
+          icon (get-user-icon mention)
+          bg (get-user-bg mention)
+          data { :id id :username username :icon icon :bg bg}
+          user-node (nodes/create data)]
+        (dbg user-node)
+        (:id user-node)
+  ))
+
 ;
 (defn mention-handler [mention] 
    (println "***** In Mentions Handler: mention = " mention)
+   ;; See if mentioner is present in user index and if not add them
+   (let [index_name "node-index-user"
+         user (get-username mention)
+         usersids (set (map :id (nodes/find index_name :user user)))]
+      (dbg usersids)
+      (if (empty? usersids)
+          (new-user mention)))
 
+   ;; If mention id is not in index then add new mention
    (let [index_name "node-index-mention-id"
          ids (set (map :id (nodes/find index_name :mentionid (:id mention))))]
       (dbg ids)
@@ -131,8 +161,15 @@
   ;;Neo4j config
   (test-connection-and-discovery-using-connect-with-string-uri)
   
-  ; If index does not exist create it
+  ; If mention index does not exist create it
   (let [name "node-index-mention-id"
+        list (nodes/all-indexes) ]
+    (if (not (some (fn [i]
+                (= name (:name i))) list))
+    (nodes/create-index name)))
+
+  ; If user index does not exist create it
+  (let [name "node-index-user"
         list (nodes/all-indexes) ]
     (if (not (some (fn [i]
                 (= name (:name i))) list))
