@@ -112,16 +112,18 @@
           data { :id id :username username :icon icon :bg bg}
           user-node (nodes/create data)]
         (dbg user-node)
+        ;;; Add user node to index keyed by name  
+        (nodes/add-to-index (:id user-node) "node-index-user" "username" username)
         (:id user-node)
   ))
 
 ;
 (defn mention-handler [mention] 
-   (println "***** In Mentions Handler: mention = " mention)
+   (println "***** In Mentions Handler: mention = "); mention)
    ;; See if mentioner is present in user index and if not add them
    (let [index_name "node-index-user"
-         user (get-username mention)
-         usersids (set (map :id (nodes/find index_name :user user)))]
+         username (get-username mention)
+         usersids (set (map :id (nodes/find index_name :username username)))]
       (dbg usersids)
       (if (empty? usersids)
           (new-user mention)))
@@ -169,11 +171,11 @@
     (nodes/create-index name)))
 
   ; If user index does not exist create it
-  (let [name "node-index-user"
+  (let [user-index-name "node-index-user"
         list (nodes/all-indexes) ]
     (if (not (some (fn [i]
-                (= name (:name i))) list))
-    (nodes/create-index name)))
+                (= user-index-name (:name i))) list))
+    (nodes/create-index user-index-name)))
 
   ;; Schedule Quartz job and trigger
   (let [job     (j/build
