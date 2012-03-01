@@ -73,22 +73,69 @@
 
 (defn get-username [mention] 
   (let [user (get mention :user) ]
-    (dbg user) 
+    ;(dbg user) 
     (:screen_name user)))
+
+(defn new-mention-link [mention] 
+    (let [
+          user_index_name "node-index-user"
+          mention_index_name  "node-index-mention-id"
+          username (get-username mention)
+          mention_id (:id mention)
+          user-node (nodes/find user_index_name :username username)
+          from-node (nodes/get (first (map :id  user-node)))
+          mention-node (nodes/find mention_index_name :mentionid mention_id )
+          to-node (nodes/get (first (map :id  mention-node)))
+          created-rel  (relationships/create from-node to-node :tweet)
+          ] 
+      ;(dbg username)
+      ;(dbg mention_id)
+      ;(dbg created-rel)
+      ;(println "****************"  user-node)
+      ;(println "****************2"  (map :id user-node))
+      ;(println "****************"  (get user-node "id"))
+      ;(println "****************4"  (type user-node ))
+      ;(doseq [node [user-node]] (println (type node)))
+      ;(doseq [node [user-node]] (println  node))
+      ;(println (apply map user-node))
+;     ; (doseq [node [user-node]] (println (first(node))))
+;     ; (doseq [node [user-node]] (println (:id (first(node)))))
+
+      ;(dbg (:id user-node))
+      ;(dbg mention-node)
+      ;(dbg (:id mention-node))
+      ;;(dbg mention-node)
+      ;;(relationships/maybe-create (nodes/get 400) (nodes/get 402) :tweet)
+      ;(relationships/create (nodes/get 400) (nodes/get 402) :tweet)
+      ;(println "asdfdasfa") 
+      ;(relationships/maybe-create mention-node user-node :tweet)
+      ;(relationships/create mention-node user-node  :tweet)
+      (println "******* New Relationship" (:id created-rel) )
+))
+
+(defn test-creating-and-immediately-accessing-a-relationship-without-properties [mention]
+  (let [from-node    (nodes/create)
+        to-node      (nodes/create)
+        created-rel  (relationships/create from-node to-node :links)
+        fetched-rel  (relationships/get (:id created-rel))]
+      (dbg created-rel)
+      (println "******* NEW Relationship" (:id created-rel) )
+))
 ;
 (defn new-mention [mention]
-  (println "In new mention" )
     ;;; Create new node for mention
     (let [text (get-mention-text mention) 
           username (get-username mention)
           data { :text text :id (:id mention) :username username}
-          node1 (nodes/create data)]
-        (dbg node1)
-        ;;; Add node to index keyed by mentionid  
-        (nodes/add-to-index (:id node1) "node-index-mention-id" "mentionid" (:id mention))
-        ;;; create relationship to user root node
-      )
-  )
+          mention-node (nodes/create data)]
+          (println "******* NEW mention" (:id mention-node) )
+          ;(dbg mention-node)
+          ;;; Add node to index keyed by mentionid  
+          (nodes/add-to-index (:id mention-node) "node-index-mention-id" "mentionid" (:id mention))
+          ;;; create relationship to user root node
+          ;(test-creating-and-immediately-accessing-a-relationship-without-properties mention)
+          (new-mention-link mention)
+            ))
 
 (defn get-user-id [mention]
   (let [user (get mention :user) ]
@@ -103,7 +150,6 @@
     (:profile_background_image_url user)))
 
 (defn new-user [mention]
-  (println "In new user" )
     ;;; Create new user node to link mention to
     (let [username (get-username mention)
           id (get-user-id mention)
@@ -111,20 +157,20 @@
           bg (get-user-bg mention)
           data { :id id :username username :icon icon :bg bg}
           user-node (nodes/create data)]
-        (dbg user-node)
+        ;(dbg user-node)
         ;;; Add user node to index keyed by name  
         (nodes/add-to-index (:id user-node) "node-index-user" "username" username)
-        (:id user-node)
+        (println "******* New user" (:id user-node))
   ))
 
 ;
 (defn mention-handler [mention] 
-   (println "***** In Mentions Handler: mention = "); mention)
+   (println "*** Processing mention" (:id mention)); mention)
    ;; See if mentioner is present in user index and if not add them
    (let [index_name "node-index-user"
          username (get-username mention)
          usersids (set (map :id (nodes/find index_name :username username)))]
-      (dbg usersids)
+      ;(dbg usersids)
       (if (empty? usersids)
           (new-user mention)))
 
@@ -133,18 +179,20 @@
          ids (set (map :id (nodes/find index_name :mentionid (:id mention))))]
       (dbg ids)
       (if (empty? ids)
-          (new-mention mention))    
+          (new-mention mention)
+          (println "Mention already processed")))
+     
 ;   (test-if-in-index "node-index-mention-id" (:id value))
 ;   (let [created-node (nodes/create)]
 ;      (println "node**"  (:id created-node) ))
 ;    ;    (println "asd33" (:version  endpoint))
 ;    ;    (dbg endpoint))
-     ))
+     )
 
 (defrecord JobA []
   org.quartz.Job
   (execute [this ctx]
-    (println "**** Job Executing")
+    (println "* Job Executing")
     ;; Get mentions and map mention-handler over them
     (let [ result (mentions :oauth-creds *creds* 
                             :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) 
@@ -161,7 +209,7 @@
   (println "Welcome to Graphtag")
 
   ;;Neo4j config
-  (test-connection-and-discovery-using-connect-with-string-uri)
+  ;(test-connection-and-discovery-using-connect-with-string-uri)
   
   ; If mention index does not exist create it
   (let [name "node-index-mention-id"
@@ -180,11 +228,12 @@
   ;; Schedule Quartz job and trigger
   (let [job     (j/build
                  (j/of-type forthold.graphtag.server.JobA)
-                 (j/with-identity "job1" "tests"))
+                 (j/with-identity "forthold.graphtab.server.mention" "processMentions"))
         trigger  (t/build
                   (t/start-now)
                   (t/with-schedule (s/schedule
-                                    (s/with-repeat-count 2)
-                                    (s/with-interval-in-milliseconds 2000))))]
+                                    ;(s/with-repeat-count 2)
+                                    (s/repeat-forever)
+                                    (s/with-interval-in-seconds 60))))]
     (sched/schedule job trigger))
   )
