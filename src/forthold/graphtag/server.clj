@@ -2,7 +2,7 @@
   (:use  [clojurewerkz.quartzite.conversion]
          ;[compojure]
          ;[compojure.http response]
-         [ring.adapter.jetty]
+         [ring.adapter.jetty :only [run-jetty]]
          ;[compojure.http response]
          [twitter.oauth]
          [twitter.callbacks]
@@ -49,12 +49,15 @@
 ;; Setup Neo4j connection
 (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
 ;(neorest/connect! "http://localhost:7474/db/data/")
-
 (defn app [req]
-  {:status  200
-   :headers {"Content-Type" "text/html"}
-   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
-
+  {:status 200
+   :headers {"Content-Type" "text/plain"}
+   :body "Hello, world"})
+;(defn app [req]
+;  {:status  200
+;   :headers {"Content-Type" "text/html"}
+;   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
+;
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
@@ -167,6 +170,7 @@
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
 (defn -main [port]
+  (run-jetty app {:port (Integer. port)})
   (println "Welcome to Graphtag")
  ; (run-jetty app {:port 8080})
 ;  (let [mode (keyword (or (first m) :dev))
@@ -197,5 +201,4 @@
                                     (s/repeat-forever)
                                     (s/with-interval-in-seconds 60))))]
     (sched/schedule job trigger))
-  (run-jetty app {:port (Integer. port)})
   )
