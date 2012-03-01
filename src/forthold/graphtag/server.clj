@@ -160,16 +160,17 @@
       ;(dbg (seq result))
       (doseq [mention (seq result)] (mention-handler mention)))))
 
-(defn -main [& m]
+;(defn -main [& m]
 ;  (let [mode (keyword (or (first m) :dev))
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
-;                        :ns 'forthold.graphtag}))
+(defn -main [port]
+  (run-jetty app {:port (Integer. port)})
   (println "Welcome to Graphtag")
  ; (run-jetty app {:port 8080})
-  (let [mode (keyword (or (first m) :dev))
-        port (Integer. (get (System/getenv) "PORT" "8080"))]
-      (run-jetty app {:port port}))
+;  (let [mode (keyword (or (first m) :dev))
+;        port (Integer. (get (System/getenv) "PORT" "8080"))]
+;      (run-jetty app {:port port}))
   ; If mention index does not exist create it
   (let [name "node-index-mention-id"
         list (nodes/all-indexes) ]
