@@ -6,9 +6,10 @@ It monitors twitter mentions against a custom account "GraphTag" and inpute the 
 The individual that made the tweet is also stored in neo4j and links are created from their node to any tweets they mention "GraphTag" in.
 
 As there is no front end at the moment the only way to view what is going on is to look at the neo4j console here: 
-WEB-Admin	http://a9d1efcc4.hosted.neo4j.org:7057/webadmin/
-Login	0e5d0bb39
-Password	2d1a471df
+
+* WEB-Admin	http://a9d1efcc4.hosted.neo4j.org:7057/webadmin/
+* Login	0e5d0bb39
+* Password	2d1a471df
 
 Once I have a front end up you will be able to see you own personal tweet networks as they grow!
 
@@ -18,10 +19,10 @@ The intention is to expand this to include a web front end and extra functionali
 
 Libraries used are:
 
-### Neocons - neo4j rest client
-### twitter-api - clojure based twitter api wrapper
-### Qiartzite - To wrap around quartz using clojure 
-### Ring - Good old basic salt of the earth clojure web framework
+* Neocons: written by neo4j rest client
+* Quartzite - To wrap around quartz using clojure 
+* twitter-api - clojure based twitter api wrapper
+* Ring - Good old basic salt of the earth clojure web framework
 
 ## Usage
 
