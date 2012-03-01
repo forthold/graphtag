@@ -165,7 +165,6 @@
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
 (defn -main [port]
-  (run-jetty app {:port (Integer. port)})
   (println "Welcome to Graphtag")
  ; (run-jetty app {:port 8080})
 ;  (let [mode (keyword (or (first m) :dev))
@@ -196,4 +195,5 @@
                                     (s/repeat-forever)
                                     (s/with-interval-in-seconds 60))))]
     (sched/schedule job trigger))
+  (run-jetty app {:port (Integer. port)})
   )
