@@ -143,7 +143,7 @@
          ids (set (map :id (nodes/find index_name :mentionid (:id mention))))]
       (if (empty? ids)
           (new-mention mention)
-          (println "Mention already processed, node id:" ids)))
+          (println "***** Mention already processed, node id:" ids)))
   )
 
 (defn get-current-iso-8601-date
