@@ -43,7 +43,8 @@
                          "bGnRSufusyVki3gSJbaXvhZK1MKqewVw8E00aSfT48"))
 
 ;; Setup Neo4j connection
-(neorest/connect! "http://localhost:7474/db/data/")
+(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
+;(neorest/connect! "http://localhost:7474/db/data/")
 
 
 (defn get-mention-text [mention] 
@@ -69,14 +70,14 @@
       (println "******* New Relationship" (:id created-rel) )
 ))
 
-(defn test-creating-and-immediately-accessing-a-relationship-without-properties [mention]
-  (let [from-node    (nodes/create)
-        to-node      (nodes/create)
-        created-rel  (relationships/create from-node to-node :links)
-        fetched-rel  (relationships/get (:id created-rel))]
-      (dbg created-rel)
-      (println "******* NEW Relationship" (:id created-rel) )
-))
+;(defn test-creating-and-immediately-accessing-a-relationship-without-properties [mention]
+;  (let [from-node    (nodes/create)
+;        to-node      (nodes/create)
+;        created-rel  (relationships/create from-node to-node :links)
+;        fetched-rel  (relationships/get (:id created-rel))]
+;      (dbg created-rel)
+;      (println "******* NEW Relationship" (:id created-rel) )
+;))
 ;
 (defn new-mention [mention]
     ;;; Create new node for mention
