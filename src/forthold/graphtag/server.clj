@@ -9,7 +9,6 @@
          [twitter.callbacks.handlers]
          [twitter.api.restful]
          [clojure.set :only [subset?]]
-         [clj-time.core :only [now minus plus days hours minutes]]
          [clojure.pprint :only [pprint]]
          [clojure.string :only (replace-first)])
   (:require; [noir.server :as server]
@@ -31,8 +30,6 @@
            [java.util Calendar]
            [java.text SimpleDateFormat ]
             (twitter.callbacks.protocols SyncSingleCallback)
-           [java.util Date]
-           [org.joda.time DateTime]
            [slingshot ExceptionInfo]))
 ;(server/load-views "src/forthold/graphtag/views/")
 
@@ -194,12 +191,11 @@
   (sched/start)
   
   ;; Schedule Quartz job and trigger
-  (let [delayed-start  (.toDate ^DateTime (plus (now) (minutes 1)))
-        job     (j/build
+  (let [job     (j/build
                  (j/of-type forthold.graphtag.server.JobA)
                  (j/with-identity "forthold.graphtab.server.mention" "processMentions"))
         trigger  (t/build
-                  (t/start-now);at delayed-start)
+                  (t/start-now)
                   (t/with-schedule (s/schedule
                                     ;(s/with-repeat-count 2)
                                     (s/repeat-forever)

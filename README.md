@@ -25,12 +25,11 @@ Libraries used are:
 
 ## Usage
 
-lein deps should not be necessary as I have included the lib folder as I have had to rush through some changes to the above libraries and have not yet forked etc to ensure they are avilalbel. This is not ideal I know but will fix asap.
-
 ```bash
+lein deps
 lein run
 ```
-
+Please note that one test class will currenlty not run (neo4j) as it is there to test my fork of neocon that needs to be finsihed. Will remove if I dont fix soon.
 ## License
 
 Copyright (C) 2011 Aran Elkington
