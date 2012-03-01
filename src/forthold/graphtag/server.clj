@@ -9,6 +9,7 @@
          [twitter.callbacks.handlers]
          [twitter.api.restful]
          [clojure.set :only [subset?]]
+         [clj-time.core :only [now minus plus days hours minutes]]
          [clojure.pprint :only [pprint]]
          [clojure.string :only (replace-first)])
   (:require; [noir.server :as server]
@@ -30,15 +31,14 @@
            [java.util Calendar]
            [java.text SimpleDateFormat ]
             (twitter.callbacks.protocols SyncSingleCallback)
+           [java.util Date]
+           [org.joda.time DateTime]
            [slingshot ExceptionInfo]))
 ;(server/load-views "src/forthold/graphtag/views/")
 
 ;;debugging parts of expressions
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
-;start quartz
-(sched/initialize)
-(sched/start)
 
 ;; Define creds for twitter
 (def ^:dynamic *creds* (make-oauth-creds "GkqZgjg4QikY4lBt1G1A9A"
@@ -49,15 +49,15 @@
 ;; Setup Neo4j connection
 (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
 ;(neorest/connect! "http://localhost:7474/db/data/")
-(defn app [req]
-  {:status 200
-   :headers {"Content-Type" "text/plain"}
-   :body "Hello, world"})
 ;(defn app [req]
-;  {:status  200
-;   :headers {"Content-Type" "text/html"}
-;   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
-;
+;  {:status 200
+;   :headers {"Content-Type" "text/plain"}
+;   :body "Hello, world"})
+(defn app [req]
+  {:status  200
+   :headers {"Content-Type" "text/html"}
+   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
+
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
@@ -157,6 +157,20 @@
   org.quartz.Job
   (execute [this ctx]
     (println "* Job Executing" (get-current-iso-8601-date))
+    
+    (let [name "node-index-mention-id"
+          list (nodes/all-indexes) ]
+      (if (not (some (fn [i]
+                  (= name (:name i))) list))
+      (nodes/create-index name)))
+
+    ; If user index does not exist create it
+    (let [user-index-name "node-index-user"
+          list (nodes/all-indexes) ]
+      (if (not (some (fn [i]
+                  (= user-index-name (:name i))) list))
+      (nodes/create-index user-index-name)))
+
     ;; Get mentions and map mention-handler over them
     (let [ result (mentions :oauth-creds *creds* 
                             :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) 
@@ -170,35 +184,26 @@
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
 (defn -main [port]
-  ;(run-jetty app {:port (Integer. port)})
   (println "Welcome to Graphtag")
  ; (run-jetty app {:port 8080})
 ;  (let [mode (keyword (or (first m) :dev))
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;      (run-jetty app {:port port}))
-  ; If mention index does not exist create it
-  (let [name "node-index-mention-id"
-        list (nodes/all-indexes) ]
-    (if (not (some (fn [i]
-                (= name (:name i))) list))
-    (nodes/create-index name)))
-
-  ; If user index does not exist create it
-  (let [user-index-name "node-index-user"
-        list (nodes/all-indexes) ]
-    (if (not (some (fn [i]
-                (= user-index-name (:name i))) list))
-    (nodes/create-index user-index-name)))
-
+  ;start quartz
+  (sched/initialize)
+  (sched/start)
+  
   ;; Schedule Quartz job and trigger
-  (let [job     (j/build
+  (let [delayed-start  (.toDate ^DateTime (plus (now) (minutes 1)))
+        job     (j/build
                  (j/of-type forthold.graphtag.server.JobA)
                  (j/with-identity "forthold.graphtab.server.mention" "processMentions"))
         trigger  (t/build
-                  (t/start-now)
+                  (t/start-now);at delayed-start)
                   (t/with-schedule (s/schedule
                                     ;(s/with-repeat-count 2)
                                     (s/repeat-forever)
                                     (s/with-interval-in-seconds 60))))]
     (sched/schedule job trigger))
+    (run-jetty app {:port (Integer. port)})
   )
