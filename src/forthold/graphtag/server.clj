@@ -1,5 +1,9 @@
 (ns forthold.graphtag.server
   (:use  [clojurewerkz.quartzite.conversion]
+         ;[compojure]
+         ;[compojure.http response]
+         [ring.adapter.jetty]
+         ;[compojure.http response]
          [twitter.oauth]
          [twitter.callbacks]
          [twitter.callbacks.handlers]
@@ -46,6 +50,10 @@
 (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
 ;(neorest/connect! "http://localhost:7474/db/data/")
 
+(defn app [req]
+  {:status  200
+   :headers {"Content-Type" "text/html"}
+   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
 
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
@@ -157,8 +165,9 @@
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
 ;                        :ns 'forthold.graphtag}))
-  (println "Welcome to Graphtag")
+  ;(run-server {:port 8080} "/*" (servlet webservice)(println "Welcome to Graphtag"))
 
+  (run-jetty app {:port 8080})
   ;;Neo4j config
   ;(test-connection-and-discovery-using-connect-with-string-uri)
   
