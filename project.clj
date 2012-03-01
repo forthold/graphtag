@@ -5,7 +5,8 @@
                            ;[noir "1.2.1"]
                            [ring/ring-jetty-adapter "1.1.0-SNAPSHOT"]
                            [ring "1.0.2"]
-                           [clojurewerkz/neocons "1.0.1-SNAPSHOT"]
+                           [forthold/neocons "1.0.1-SNAPSHOT"]
+                           ;[clojurewerkz/neocons "1.0.1-SNAPSHOT"]
                            [twitter-api "0.6.4"]
                            [clojurewerkz/quartzite "1.0.0-beta1"]]
             :main forthold.graphtag.server)
