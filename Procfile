@@ -1,1 +1,1 @@
-web: lein run -m noirtest.server $PORT
+web: lein run -m forthold.graphtag.server $PORT

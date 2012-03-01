@@ -23,9 +23,10 @@
             )
   (:import [java.util.concurrent CountDownLatch]
            [org.quartz.impl.matchers GroupMatcher]
+           [java.util Calendar]
+           [java.text SimpleDateFormat ]
             (twitter.callbacks.protocols SyncSingleCallback)
            [slingshot ExceptionInfo]))
-
 ;(server/load-views "src/forthold/graphtag/views/")
 
 ;;debugging parts of expressions
@@ -45,29 +46,6 @@
 (neorest/connect! "http://localhost:7474/db/data/")
 
 
-(defn test-connection-and-discovery-using-connect-with-string-uri []
-  (let [endpoint (neorest/connect "http://localhost:7474/db/data/")]
-    (println endpoint)
-    (println (:version endpoint))
-    ))
-
-
-;; Handle a map of mentions keyed on metion id
-;;; Will put id in neo4j index first checking if its there
-;(defn mentionsMapHandler [map_of_mentions] 
-;  ;work out what mentions havent been processed
-;  (let [mention_ids (keys map_of_mentions)]
-;      (println "mention ids =" mention_ids) 
-;     )
-;  )
-
-;(defn test-if-in-index [index mentionid] 
-;    (let [ids (set (map :id (nodes/find index :mentionid mentionid)))]
-;         (dbg ids)
-;        (if (empty? ids)
-;            (nodes/add-to-index mentionid index "mentionid" url1)
-;      )    
-;  )
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
@@ -88,28 +66,6 @@
           to-node (nodes/get (first (map :id  mention-node)))
           created-rel  (relationships/create from-node to-node :tweet)
           ] 
-      ;(dbg username)
-      ;(dbg mention_id)
-      ;(dbg created-rel)
-      ;(println "****************"  user-node)
-      ;(println "****************2"  (map :id user-node))
-      ;(println "****************"  (get user-node "id"))
-      ;(println "****************4"  (type user-node ))
-      ;(doseq [node [user-node]] (println (type node)))
-      ;(doseq [node [user-node]] (println  node))
-      ;(println (apply map user-node))
-;     ; (doseq [node [user-node]] (println (first(node))))
-;     ; (doseq [node [user-node]] (println (:id (first(node)))))
-
-      ;(dbg (:id user-node))
-      ;(dbg mention-node)
-      ;(dbg (:id mention-node))
-      ;;(dbg mention-node)
-      ;;(relationships/maybe-create (nodes/get 400) (nodes/get 402) :tweet)
-      ;(relationships/create (nodes/get 400) (nodes/get 402) :tweet)
-      ;(println "asdfdasfa") 
-      ;(relationships/maybe-create mention-node user-node :tweet)
-      ;(relationships/create mention-node user-node  :tweet)
       (println "******* New Relationship" (:id created-rel) )
 ))
 
@@ -157,7 +113,6 @@
           bg (get-user-bg mention)
           data { :id id :username username :icon icon :bg bg}
           user-node (nodes/create data)]
-        ;(dbg user-node)
         ;;; Add user node to index keyed by name  
         (nodes/add-to-index (:id user-node) "node-index-user" "username" username)
         (println "******* New user" (:id user-node))
@@ -170,29 +125,24 @@
    (let [index_name "node-index-user"
          username (get-username mention)
          usersids (set (map :id (nodes/find index_name :username username)))]
-      ;(dbg usersids)
       (if (empty? usersids)
           (new-user mention)))
 
    ;; If mention id is not in index then add new mention
    (let [index_name "node-index-mention-id"
          ids (set (map :id (nodes/find index_name :mentionid (:id mention))))]
-      (dbg ids)
       (if (empty? ids)
           (new-mention mention)
-          (println "Mention already processed")))
-     
-;   (test-if-in-index "node-index-mention-id" (:id value))
-;   (let [created-node (nodes/create)]
-;      (println "node**"  (:id created-node) ))
-;    ;    (println "asd33" (:version  endpoint))
-;    ;    (dbg endpoint))
-     )
+          (println "Mention already processed"))))
+
+(defn get-current-iso-8601-date
+  "Returns current ISO 8601 compliant date."
+  [] (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZ") (.getTime (Calendar/getInstance))))
 
 (defrecord JobA []
   org.quartz.Job
   (execute [this ctx]
-    (println "* Job Executing")
+    (println "* Job Executing" (get-current-iso-8601-date))
     ;; Get mentions and map mention-handler over them
     (let [ result (mentions :oauth-creds *creds* 
                             :callbacks (SyncSingleCallback. response-return-body response-throw-error exception-rethrow) 
