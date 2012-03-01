@@ -135,14 +135,16 @@
          username (get-username mention)
          usersids (set (map :id (nodes/find index_name :username username)))]
       (if (empty? usersids)
-          (new-user mention)))
+          (new-user mention)
+          (println "***** User already exists:" username " node id:" usersids)))
 
    ;; If mention id is not in index then add new mention
    (let [index_name "node-index-mention-id"
          ids (set (map :id (nodes/find index_name :mentionid (:id mention))))]
       (if (empty? ids)
           (new-mention mention)
-          (println "Mention already processed"))))
+          (println "Mention already processed, node id:" ids)))
+  )
 
 (defn get-current-iso-8601-date
   "Returns current ISO 8601 compliant date."
