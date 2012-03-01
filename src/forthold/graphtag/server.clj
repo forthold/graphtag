@@ -170,7 +170,7 @@
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
 (defn -main [port]
-  (run-jetty app {:port (Integer. port)})
+  ;(run-jetty app {:port (Integer. port)})
   (println "Welcome to Graphtag")
  ; (run-jetty app {:port 8080})
 ;  (let [mode (keyword (or (first m) :dev))
