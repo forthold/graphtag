@@ -165,12 +165,11 @@
 ;        port (Integer. (get (System/getenv) "PORT" "8080"))]
 ;    (server/start port {:mode mode
 ;                        :ns 'forthold.graphtag}))
-  ;(run-server {:port 8080} "/*" (servlet webservice)(println "Welcome to Graphtag"))
-
-  (run-jetty app {:port 8080})
-  ;;Neo4j config
-  ;(test-connection-and-discovery-using-connect-with-string-uri)
-  
+  (println "Welcome to Graphtag")
+ ; (run-jetty app {:port 8080})
+  (let [mode (keyword (or (first m) :dev))
+        port (Integer. (get (System/getenv) "PORT" "8080"))]
+      (run-jetty app {:port port}))
   ; If mention index does not exist create it
   (let [name "node-index-mention-id"
         list (nodes/all-indexes) ]
