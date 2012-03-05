@@ -2,8 +2,8 @@
             :description "GraphTag Twitter to Neo4j"
             :dependencies [[org.clojure/clojure "1.3.0"]
                            ;[compojure "1.0.1"]
-                           ;[noir "1.2.1"]
-                           [ring/ring-jetty-adapter "1.1.0-SNAPSHOT"]
+                           [noir-forthold "0.1.0"]
+                           ;[ring/ring-jetty-adapter "1.1.0-SNAPSHOT"]
                            [ring "1.0.2"]
                            [forthold/neocons "1.0.2-SNAPSHOT"]
                            ;[clojurewerkz/neocons "1.0.1-SNAPSHOT"]

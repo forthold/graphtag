@@ -11,7 +11,7 @@
          [clojure.set :only [subset?]]
          [clojure.pprint :only [pprint]]
          [clojure.string :only (replace-first)])
-  (:require; [noir.server :as server]
+  (:require [noir.server :as server]
             [clojurewerkz.quartzite.scheduler :as sched]
             [clojurewerkz.quartzite.jobs      :as j]
             [clojurewerkz.quartzite.triggers  :as t]
@@ -31,7 +31,7 @@
            [java.text SimpleDateFormat ]
             (twitter.callbacks.protocols SyncSingleCallback)
            [slingshot ExceptionInfo]))
-;(server/load-views "src/forthold/graphtag/views/")
+(server/load-views "src/forthold/graphtag/views/")
 
 ;;debugging parts of expressions
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
@@ -44,17 +44,17 @@
                          "bGnRSufusyVki3gSJbaXvhZK1MKqewVw8E00aSfT48"))
 
 ;; Setup Neo4j connection
-(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
+(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7143/db/data/" "0e5d0bb39" "2d1a471df")
 ;(neorest/connect! "http://localhost:7474/db/data/")
 ;(defn app [req]
 ;  {:status 200
 ;   :headers {"Content-Type" "text/plain"}
 ;   :body "Hello, world"})
-(defn app [req]
-  {:status  200
-   :headers {"Content-Type" "text/html"}
-   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
-
+;(defn app [req]
+;  {:status  200
+;   :headers {"Content-Type" "text/html"}
+;   :body    "GraphTag go to <a href='http://forthold.com' > forthold.com </a> for more"})
+;
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
@@ -176,16 +176,16 @@
       ;(dbg (seq result))
       (doseq [mention (seq result)] (mention-handler mention)))))
 
-;(defn -main [& m]
-;  (let [mode (keyword (or (first m) :dev))
-;        port (Integer. (get (System/getenv) "PORT" "8080"))]
-;    (server/start port {:mode mode
-(defn -main [port]
+;(defn -main [port]
+
+(defn -main [& m]
+  (let [mode (keyword (or (first m) :dev))
+        port (Integer. (get (System/getenv) "PORT" "8080"))]
+    (server/start port {:mode mode
+                        :ns 'forthold.graphtag}))
+
   (println "Welcome to Graphtag")
- ; (run-jetty app {:port 8080})
-;  (let [mode (keyword (or (first m) :dev))
-;        port (Integer. (get (System/getenv) "PORT" "8080"))]
-;      (run-jetty app {:port port}))
+
   ;start quartz
   (sched/initialize)
   (sched/start)
@@ -201,5 +201,5 @@
                                     (s/repeat-forever)
                                     (s/with-interval-in-seconds 60))))]
     (sched/schedule job trigger))
-    (run-jetty app {:port (Integer. port)})
+   ; (run-jetty app {:port (Integer. port)})
   )
