@@ -44,7 +44,7 @@
                          "bGnRSufusyVki3gSJbaXvhZK1MKqewVw8E00aSfT48"))
 
 ;; Setup Neo4j connection
-(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7143/db/data/" "0e5d0bb39" "2d1a471df")
+(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
 ;(neorest/connect! "http://localhost:7474/db/data/")
 ;(defn app [req]
 ;  {:status 200
