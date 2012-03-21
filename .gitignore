@@ -1,6 +1,8 @@
+.lein-failures
 pom.xml
 *.jar
 /lib
 /classes/
 .lein-deps-sum
 *.swp
+*.swo

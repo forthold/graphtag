@@ -14,7 +14,7 @@
 ;;debugging parts of expressions
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
-(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
+(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
 
 (deftest index-check-via-nodes-find
    ;; See if mentioner is present in user index and if not add them
@@ -37,12 +37,19 @@
   ; (println "*** 3333Processing mention" (:id mention)); mention)
   )
 
+(deftest follower-index-check
+   ;; See if mentioner is present in user index and if not add them
+   (let [followerid 175021916694904833
+         index_name "followerid"
+         follower-id-set ( set (map :followerid (nodes/find index_name :followerid followerid )))]
+             (if (empty? follower-id-set )
+                 (dbg follower-id-set))))
 ;;
 ;; Connections/Discovery
 ;;
 
 (deftest test-connection-and-discovery-using-connect-with-string-uri
-  (let [endpoint (neorest/connect "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")]
+  (let [endpoint (neorest/connect "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")]
     (println endpoint)
     (println (:version endpoint))
 
