@@ -35,8 +35,7 @@
                                     (s/repeat-forever)
                                     (s/with-interval-in-minutes 3))))]
     (sched/schedule mention-job mention-trigger)
-    (sched/schedule follow-job follow-trigger))
-  )
+    (sched/schedule follow-job follow-trigger)))
 
 (defn set-up-neo4j-indexes [] 
     (let [list (nodes/all-indexes)]
