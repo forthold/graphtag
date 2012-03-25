@@ -1,5 +1,6 @@
 (ns forthold.graphtag.common
-  (:require [clojurewerkz.neocons.rest.nodes :as nodes]
+  (:require [clojurewerkz.neocons.rest               :as neorest]
+            [clojurewerkz.neocons.rest.nodes         :as nodes]
             [twitter.callbacks.handlers :as twitter-handlers]
             [twitter.oauth :as oauth]
             [twitter.api.restful :as twitter-rest])
