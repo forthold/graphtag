@@ -8,6 +8,7 @@
            [java.util Calendar]
            [java.text SimpleDateFormat ])
   )
+
 ;; Neo4j Index constants
 (def ^:const index-user-id "userid")
 (def ^:const index-user-name "username")
@@ -20,13 +21,27 @@
                          "491183182-M8HQywLDXLVVYuMPBNg03ZW58Ox6ysgHH9Bkc8QA"
                          "bGnRSufusyVki3gSJbaXvhZK1MKqewVw8E00aSfT48"))
 
+(defn set-up-neo4j-indexes [] 
+    (let [list (nodes/all-indexes)]
+      (if (not (some (fn [i]
+          (= index-user-name (:name i))) list))
+      (nodes/create-index index-user-name))
+
+      (if (not (some (fn [i]
+          (= index-mention-id (:name i))) list))
+      (nodes/create-index index-mention-id))
+
+      (if (not (some (fn [i]
+          (= index-user-id (:name i))) list))
+      (nodes/create-index index-user-id))))
+
 (defn create-user-data [user]
-    (let [username (:screen_name  (user))
-          id (:id (user))
-          realname (:name (user))
-          description (:description (user))
-          icon (:profile_image_url (user))
-          bg (:profile_background_image_url (user))]
+    (let [username (:screen_name user)
+          id (:id user)
+          realname (:name user)
+          description (:description user)
+          icon (:profile_image_url user)
+          bg (:profile_background_image_url user)]
           { :id id :realname realname 
             :description description :username username 
             :icon icon :bg bg})
@@ -42,7 +57,7 @@
         (:id user-node)))
 
 (defn user-id-exists [id] 
-    (complement (empty? (set (map :userid (nodes/find index-user-id :userid id)))) ))
+    (not-empty (set (map :userid (nodes/find index-user-id :userid id)))) )
 
 (defn create-new-user-from-id [id]
     (let [ user (twitter-rest/show-user 

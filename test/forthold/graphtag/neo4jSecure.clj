@@ -7,64 +7,64 @@
             [slingshot.slingshot :as slingshot])
   (:import [slingshot ExceptionInfo])
   (:use [clojure.test]
+        [forthold.graphtag.test-common]
+        [forthold.graphtag.common]
         [clojure.set :only [subset?]]
         [clojure.pprint :only [pprint]]
         [clojurewerkz.neocons.rest.records :only [instantiate-node-from instantiate-rel-from instantiate-path-from]]))
 
-;;debugging parts of expressions
-(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
+;(neorest/connect! "http://0e5d0bb39:2d1a471df@a9d1efcc4.hosted.neo4j.org:7062/db/data")
+;(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
+(def user-name-index "test-user-name")
 
-(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
+(defn mention-fixture [f]
+  (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
+  (nodes/create-index user-name-index)
+  (f)
+ ; (nodes/delete-index user-name-index)
+  )
 
-(deftest index-check-via-nodes-find
+(use-fixtures :once mention-fixture)
+
+;; Test that graphtag test is a user against remote DB. Should be true unless DB truncated.
+(deftest test-add-node-to-index
    ;; See if mentioner is present in user index and if not add them
-   (let [mentionId 175021916694904833
-         index_name "node-index-user"
-         username "graphtagtest"
-         usersids (set (map :id (nodes/find index_name :username username)))]
-      (dbg usersids)    
-      (if (empty? usersids)
-          (println "No user found")))
+   (let [ user-node  (nodes/create (create-user-data (:user mention)))
+          ih  (nodes/add-to-index (:id user-node) user-name-index "username" username )
+          set-from-index (set (map :id (nodes/find user-name-index :username username)))]
+        (dbg set-from-index)
+        (is (not-empty set-from-index))
+        (is (= (empty? set-from-index) false))))
 
   ; (println "*** Pasdfasdfrocessing mention" (:id mention)); mention)
   ; ;; If mention id is not in index then add new mention
   ; (let [index_name "node-index-mention-id"
   ;       ids (set (map :id (nodes/find index_name :mentionid (:id mention))))]
   ;    (if (empty? ids)
-  ;        (new-mention mention)
+  ;        (new-mention ment:ion)
   ;        (println "Mention already processed")))
   ;
   ; (println "*** 3333Processing mention" (:id mention)); mention)
-  )
 
-(deftest follower-index-check
-   ;; See if mentioner is present in user index and if not add them
-   (let [followerid 175021916694904833
-         index_name "followerid"
-         follower-id-set ( set (map :followerid (nodes/find index_name :followerid followerid )))]
-             (if (empty? follower-id-set )
-                 (dbg follower-id-set))))
+;(deftest follower-index-check
+;   ;; See if mentioner is present in user index and if not add them
+;   (let [followerid 175021916694904833
+;         index_name "followerid"
+;         follower-id-set ( set (map :followerid (nodes/find index_name :followerid followerid )))]
+;             (if (empty? follower-id-set )
+;                 (dbg follower-id-set))))
 ;;
 ;; Connections/Discovery
 ;;
 
-(deftest test-connection-and-discovery-using-connect-with-string-uri
-  (let [endpoint (neorest/connect "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")]
-    (println endpoint)
-    (println (:version endpoint))
-
-    (is (:version                endpoint))
-    (is (:node-uri               endpoint))
-    (is (:batch-uri              endpoint))
-    (is (:relationship-types-uri endpoint))))
-
-
-(deftest test-connection-and-discovery-using-connect!-with-string-uri
-  (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7057/db/data/" "0e5d0bb39" "2d1a471df")
-  (is (:version                neorest/*endpoint*))
-  (is (:node-uri               neorest/*endpoint*))
-  (is (:batch-uri              neorest/*endpoint*))
-  (is (:relationship-types-uri neorest/*endpoint*)))
+;(deftest test-connection-and-discovery-using-connect-with-string-uri
+;  (let [endpoint (neorest/connect! "http://localhost:7474/db/data/")]
+;    (println (:version endpoint))
+;
+;    (is (:version                endpoint))
+;    (is (:node-uri               endpoint))
+;    (is (:batch-uri              endpoint))
+;    (is (:relationship-types-uri endpoint))))
 
 
 
@@ -72,10 +72,10 @@
 ;; Working with nodes
 ;;
 
-(deftest test-creating-and-immediately-accessing-a-node-without-properties
-  (let [created-node (nodes/create)
-        fetched-node (nodes/get (:id created-node))]
-    (is (= (:id created-node) (:id fetched-node)))))
+;(deftest test-creating-and-immediately-accessing-a-node-without-properties
+;  (let [created-node (nodes/create)
+;        fetched-node (nodes/get (:id created-node))]
+;    (is (= (:id created-node) (:id fetched-node)))))
 
 ;(deftest test-creating-and-immediately-accessing-a-node-with-properties
 ;  (let [data         { :key "value" }
@@ -144,13 +144,13 @@
 ;;; Working with relationships
 ;;;
 ;
-(deftest test-creating-and-immediately-accessing-a-relationship-without-properties
-  (let [from-node    (nodes/create)
-        to-node      (nodes/create)
-        created-rel  (relationships/create from-node to-node :links)
-        fetched-rel  (relationships/get (:id created-rel))]
-    (is (= (:id created-rel) (:id fetched-rel)))
-    (is (= (:type created-rel) (:type fetched-rel)))))
+;(deftest test-creating-and-immediately-accessing-a-relationship-without-properties
+;  (let [from-node    (nodes/create)
+;        to-node      (nodes/create)
+;        created-rel  (relationships/create from-node to-node :links)
+;        fetched-rel  (relationships/get (:id created-rel))]
+;    (is (= (:id created-rel) (:id fetched-rel)))
+;    (is (= (:type created-rel) (:type fetched-rel)))))
 
 ;(deftest test-creating-the-same-relationship-without-properties-twice
 ;  (let [from-node    (nodes/create)
@@ -323,21 +323,21 @@
 ;;; Indexes
 ;;;
 ;
-(deftest ^{:indexing true} test-create-a-new-node-index-with-default-configuration
-  (let [name "node-index-1-default-configuration"]
-    (nodes/create-index name)))
-
-;(deftest ^{:indexing true} test-create-a-new-node-index-with-explicit-configuration
-;  (let [name "node-index-2"
-;        conf { :type "fulltext" :provider "lucene" }]
-;    (nodes/create-index name conf)))
+;(deftest ^{:indexing true} test-create-a-new-node-index-with-default-configuration
+;  (let [name "node-index-1-default-configuration"]
+;    (nodes/create-index name)))
 ;
-(deftest ^{:indexing true} test-listing-node-indexes
-  (let [name "node-index-3"
-        idx  (nodes/create-index name)
-        list (nodes/all-indexes)]
-    (is (some (fn [i]
-                (= name (:name i))) list))))
+;;(deftest ^{:indexing true} test-create-a-new-node-index-with-explicit-configuration
+;;  (let [name "node-index-2"
+;;        conf { :type "fulltext" :provider "lucene" }]
+;;    (nodes/create-index name conf)))
+;;
+;(deftest ^{:indexing true} test-listing-node-indexes
+;  (let [name "node-index-3"
+;        idx  (nodes/create-index name)
+;        list (nodes/all-indexes)]
+;    (is (some (fn [i]
+;                (= name (:name i))) list))))
 
 ;(deftest ^{:indexing true} test-creating-and-immediately-deleting-a-node-index
 ;  (let [name "node-index-4-default-configuration"

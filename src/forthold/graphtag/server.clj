@@ -1,4 +1,6 @@
-(ns forthold.graphtag.server
+(ns ^{:author "Aran C Elkington"
+      :doc "Graphtag allows integration between Neo4j and twitter."}
+    forthold.graphtag.server
   (:use  [clojurewerkz.quartzite.conversion]
          [forthold.graphtag.common]
          [forthold.graphtag.followers]
@@ -37,19 +39,6 @@
     (sched/schedule mention-job mention-trigger)
     (sched/schedule follow-job follow-trigger)))
 
-(defn set-up-neo4j-indexes [] 
-    (let [list (nodes/all-indexes)]
-      (if (not (some (fn [i]
-          (= index-user-name (:name i))) list))
-      (nodes/create-index index-user-name))
-
-      (if (not (some (fn [i]
-          (= index-mention-id (:name i))) list))
-      (nodes/create-index index-mention-id))
-
-      (if (not (some (fn [i]
-          (= index-user-id (:name i))) list))
-      (nodes/create-index index-user-id))))
 
 (defn -main [& m]
   (let [mode (keyword (or (first m) :dev))
@@ -60,6 +49,8 @@
   (server/start port {:mode mode
                         :ns 'forthold.graphtag}))
   ;; Setup Neo4j connection
+  ;(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data")
+
   (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
   (set-up-neo4j-indexes)
   ;start quartz
@@ -68,3 +59,4 @@
   ;; Schedule Quartz jobs and trigger
   (setup-quartz-jobs)
   )
+

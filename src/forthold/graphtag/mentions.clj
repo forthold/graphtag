@@ -8,7 +8,6 @@
   (:import [twitter.callbacks.protocols SyncSingleCallback])
   )
 
-
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
