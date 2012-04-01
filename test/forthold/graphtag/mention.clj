@@ -20,8 +20,8 @@
   (is (nil? (user-id-exists userid)))
   (let [ id (create-new-user (:user mention))]
     (is (user-id-exists userid))
-   ; (nodes/delete-from-index id index-user-id)
-   ; (nodes/delete id)
+    (nodes/delete-from-index id index-user-id)
+    (nodes/delete id)
     )) 
 
 (deftest test-mention-handler  

@@ -15,10 +15,6 @@
             )
            )
 
-
-;; Load webapps views
-(server/load-views "src/forthold/graphtag/views/")
-
 (defn setup-quartz-jobs [] 
   (let [mention-job     (j/build
                  (j/of-type forthold.graphtag.mentions.MentionJob)
@@ -41,22 +37,28 @@
 
 
 (defn -main [& m]
-  (let [mode (keyword (or (first m) :dev))
-        port (Integer. (get (System/getenv) "PORT" "8080"))]
-  
-  (println "Welcome to Graphtag: Neo4j:" (get (System/getenv) "NEO4J_REST_URL"))
-  ;; Start Noir
-  (server/start port {:mode mode
-                        :ns 'forthold.graphtag}))
-  ;; Setup Neo4j connection
-  ;(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data")
+  ;; Load webapps views
+  (server/load-views "src/forthold/graphtag/views/")
 
-  (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
+  (let [mode (keyword (or (first m) :dev))
+        port (Integer. (get (System/getenv) "PORT" "8080"))
+        url (get (System/getenv) "NEO4J_REST_URL")
+        user (get (System/getenv) "NEO4J_LOGIN")
+        pass  (get (System/getenv) "NEO4J_PASSWORD") ]
+  
+    (println "Welcome to Graphtag: Neo4j url:" url " user: " user " pass:" pass)
+    ;; Start Noir
+    (server/start port {:mode mode
+                          :ns 'forthold.graphtag})
+    ;; Setup Neo4j connection
+    ;(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data")
+
+    (neorest/connect! url user pass))
+
   (set-up-neo4j-indexes)
   ;start quartz
   (sched/initialize)
   (sched/start)
   ;; Schedule Quartz jobs and trigger
-  (setup-quartz-jobs)
-  )
+  (setup-quartz-jobs)) 
 

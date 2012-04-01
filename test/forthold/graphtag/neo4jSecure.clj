@@ -18,7 +18,8 @@
 (def user-name-index "test-user-name")
 
 (defn mention-fixture [f]
-  (neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
+  ;(neorest/connect! "http://a9d1efcc4.hosted.neo4j.org:7062/db/data/" "0e5d0bb39" "2d1a471df")
+  (neorest/connect! "http://0e5d0bb39:2d1a471df@a9d1efcc4.hosted.neo4j.org:7062/db/data" "0e5d0bb39" "2d1a471df")
   (nodes/create-index user-name-index)
   (f)
  ; (nodes/delete-index user-name-index)
@@ -33,8 +34,7 @@
           ih  (nodes/add-to-index (:id user-node) user-name-index "username" username )
           set-from-index (set (map :id (nodes/find user-name-index :username username)))]
         (dbg set-from-index)
-        (is (not-empty set-from-index))
-        (is (= (empty? set-from-index) false))))
+        (is (not-empty set-from-index))))
 
   ; (println "*** Pasdfasdfrocessing mention" (:id mention)); mention)
   ; ;; If mention id is not in index then add new mention
