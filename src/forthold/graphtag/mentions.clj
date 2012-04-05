@@ -11,9 +11,13 @@
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
-;; Create relationship as user and mention nodes already exist
-(defn new-mention-link [mention] 
-    (let [username (:screen_name (:user  mention))
+;; Create relationships between:
+;; Mentioner --mentioned-> Mentioned User
+;; Mentioner --tweeted-> Mention
+;; Mention --mentions-> Mentioned User
+(defn handle-mention-links [mention mention-node-id] 
+    (let [mentioned-user (:screen_name (:user  mention))
+
          mention_id (:id mention)
          user-node (nodes/find index-user-name :username username)
          from-node (nodes/get (first (map :id  user-node)))
@@ -25,23 +29,24 @@
 ))
 
 (defn create-mention-data [mention]
-    (let [username (:screen_name  (mention))
-          id (:id (mention))
-          text (get-mention-text mention)
-          username (:screen_name (:user mention))]
+    (let [username (:screen_name  mention)
+          id (:id mention)
+          text (get-mention-text mention)]
           { :text text :id (:id mention) :username username}))
 
 ;; Create new node for mention
 (defn create-new-mention [mention]
-    (let [ mention-node (nodes/create (create-mention-data mention))]
-          (println "******* new mention" (:id mention-node) )
+    (let [ mention-node (nodes/create (create-mention-data mention))
+           node-id (:id mention-node) ]
+          (println "******* new mention" node-id)
           ;;; add node to index keyed by mentionid  
-          (nodes/add-to-index (:id mention-node) index-mention-id "mentionid" (:id mention))
-          (new-mention-link mention)))
+          (nodes/add-to-index node-id index-mention-id "mentionid" (:id mention))
+          (new-mention-link mention node-id)
+          node-id))
 
 (defn mention-id-exists [id] 
    (let [ids (set (map :id (nodes/find index-mention-id :mentionid id )))]
-      (complement (empty? ids))))
+      (not-empty ids)))
  
 ;; Process a mention.
 (defn mention-handler [mention] 

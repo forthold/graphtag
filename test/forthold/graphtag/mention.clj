@@ -10,7 +10,7 @@
 
 ;; Set up test indexs and kill nodes after
 (defn mention-fixture [f]
-  (neorest/connect! "http://localhost:7474//db/data/")
+  (neorest/connect! "http://localhost:7474/db/data/")
   (set-up-neo4j-indexes)
   (f))
 
@@ -18,11 +18,26 @@
 
 (deftest test-user-id-exists-and-create-new-user
   (is (nil? (user-id-exists userid)))
+  (is (nil? (user-name-exists username)))
   (let [ id (create-new-user (:user mention))]
     (is (user-id-exists userid))
+    (is (user-name-exists username))
+    ;; TODO create a delete user function
     (nodes/delete-from-index id index-user-id)
+    (nodes/delete-from-index id index-user-name)
     (nodes/delete id)
-    )) 
+    ) 
+  (is (nil? (user-name-exists username)))
+  (is (nil? (user-id-exists userid))))
+
+(deftest test-mention-id-exists-and-create-new-mention
+  (is (nil? (mention-id-exists mentionid)))
+  (let [ id (create-new-mention mention)]
+    (is (mention-id-exists mentionid))
+    (nodes/delete-from-index id index-mention-id)
+    (nodes/delete id)
+    ) 
+  (is (nil? (mention-id-exists mentionid))))
 
 (deftest test-mention-handler  
     (let [mention { :user mention}]

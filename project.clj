@@ -10,6 +10,7 @@
                            [clojurewerkz/neocons "1.0.0-beta2"]
                            ;[clojurewerkz/neocons "1.0.0-beta1"]
                            [twitter-api "0.6.4"]
+                           [org.clojars.tavisrudd/redis-clojure "1.3.1"]
                            [clojurewerkz/quartzite "1.0.0-beta1"]]
             :main forthold.graphtag.server
             :dev-dependencies [[clj-time                  "0.3.5" :exclusions [org.clojure/clojure]]

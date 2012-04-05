@@ -44,7 +44,8 @@
         port (Integer. (get (System/getenv) "PORT" "8080"))
         url (get (System/getenv) "NEO4J_REST_URL")
         user (get (System/getenv) "NEO4J_LOGIN")
-        pass  (get (System/getenv) "NEO4J_PASSWORD") ]
+        pass  (get (System/getenv) "NEO4J_PASSWORD")
+        redisurl (get (System/getenv) "REDISTOGO_URL") ]
   
     (println "Welcome to Graphtag: Neo4j url:" url " user: " user " pass:" pass)
     ;; Start Noir
@@ -55,6 +56,8 @@
 
     (neorest/connect! url user pass))
 
+  ;; TODO Set up redis with neo4j traversal of mentions and followers
+  ;; Redis will hold: followers, mentions, mentioners
   (set-up-neo4j-indexes)
   ;start quartz
   (sched/initialize)

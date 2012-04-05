@@ -13,6 +13,7 @@
 (def ^:const index-user-id "userid")
 (def ^:const index-user-name "username")
 (def ^:const index-mention-id "mentionid")
+(def ^:const index-follower-id "followerid")
 
 ;; Define creds for twitter
 ;; TODO get this from a non source controled file
@@ -26,6 +27,10 @@
       (if (not (some (fn [i]
           (= index-user-name (:name i))) list))
       (nodes/create-index index-user-name))
+
+      (if (not (some (fn [i]
+          (= index-follower-id (:name i))) list))
+      (nodes/create-index index-follower-id))
 
       (if (not (some (fn [i]
           (= index-mention-id (:name i))) list))
@@ -51,13 +56,29 @@
 (defn create-new-user [user]
     ;;; Create new user node to link mention to
     (let [user-node (nodes/create (create-user-data user))]
-        (nodes/add-to-index (:id user-node) index-user-name "username" (:username user))
+        (nodes/add-to-index (:id user-node) index-user-name "username" (:screen_name user))
         (nodes/add-to-index (:id user-node) index-user-id "userid" (:id user))
-        (println "******* New user" (:id user-node))
+        (println "******* New user created, node id = " (:id user-node))
         (:id user-node)))
+
+(defn get-user-node-or-create [user]
+    (let [node (nodes/find index-user-name :username (:screen_name user))] 
+      (if (empty node)
+        (create-new-user user)
+        (node)
+      )
+  ))
+
+(defn delete-user-by-id [id] 
+  (nodes/delete-from-index id index-user-id)
+  (nodes/delete-from-index id index-user-name)
+  (nodes/delete id))
 
 (defn user-id-exists [id] 
     (not-empty (set (map :userid (nodes/find index-user-id :userid id)))) )
+
+(defn user-name-exists [username] 
+    (not-empty (set (map :userid (nodes/find index-user-name :username username)))))
 
 (defn create-new-user-from-id [id]
     (let [ user (twitter-rest/show-user 
