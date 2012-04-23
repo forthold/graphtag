@@ -8,54 +8,39 @@
   (:import [twitter.callbacks.protocols SyncSingleCallback])
   )
 
+(defn delete-mention-by-id [id]
+    (nodes/delete-from-index id index-mention-id)
+    (nodes/delete id))
+
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
 ;; Create relationships between:
-;; Mentioner --mentioned-> Mentioned User
 ;; Mentioner --tweeted-> Mention
-;; Mention --mentions-> Mentioned User
-(defn handle-mention-links [mention mention-node-id] 
-    (let [mentioned-user (:screen_name (:user  mention))
-
-         mention_id (:id mention)
-         user-node (nodes/find index-user-name :username username)
-         from-node (nodes/get (first (map :id  user-node)))
-         mention-node (nodes/find index-mention-id :mentionid mention_id )
-         to-node (nodes/get (first (map :id  mention-node)))
-         created-rel  (relationships/create from-node to-node :tweet)
-         ] 
-      (println "******* New Relationship " (:id created-rel) " from " username " to mention id: " mention_id )
-))
+(defn link-mention-and-user [mention mention-node]
+   (println "******* New Relationship from " (:screen_name (:user mention)) " to mention id: " (:id mention))
+   (relationships/create (get-user-node-or-create (:user mention)) mention-node :tweet))
 
 (defn create-mention-data [mention]
-    (let [username (:screen_name  mention)
+    (let [username (:screen_name (:user  mention))
           id (:id mention)
           text (get-mention-text mention)]
           { :text text :id (:id mention) :username username}))
 
 ;; Create new node for mention
 (defn create-new-mention [mention]
-    (let [ mention-node (nodes/create (create-mention-data mention))
-           node-id (:id mention-node) ]
-          (println "******* new mention" node-id)
-          ;;; add node to index keyed by mentionid  
-          (nodes/add-to-index node-id index-mention-id "mentionid" (:id mention))
-          (new-mention-link mention node-id)
-          node-id))
+    (let [ mention-node (nodes/create (create-mention-data mention))]
+          (println "******* New Mention" (:id mention-node))
+          (nodes/add-to-index (:id mention-node) index-mention-id "mentionid" (:id mention))
+          (link-mention-and-user mention mention-node)
+          mention-node))
 
 (defn mention-id-exists [id] 
-   (let [ids (set (map :id (nodes/find index-mention-id :mentionid id )))]
-      (not-empty ids)))
+   (not (nil? (:id (first (nodes/find index-mention-id :mentionid id))))))
  
 ;; Process a mention.
 (defn mention-handler [mention] 
    (println "*** Processing mention" (:id mention)); mention)
-   ;; See if mentioner is present in user index and if not create and add.
-   (if (not (user-id-exists (:user mention))) 
-          (create-new-user (:user mention))
-          (println "***** User " (:screen_name(:user mention)) (:id (:user mention)) " already exists"))
-
    (if (not (mention-id-exists (:id mention)))
           (create-new-mention mention)
           (println "***** Mention " (:id mention) "already processed")))

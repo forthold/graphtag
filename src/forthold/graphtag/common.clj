@@ -40,6 +40,13 @@
           (= index-user-id (:name i))) list))
       (nodes/create-index index-user-id))))
 
+(defn user-id-exists [id] 
+    (not (nil? (:id (first (nodes/find index-user-id :userid id))))))
+
+(defn user-name-exists [username] 
+    (string? (get-in (first (nodes/find index-user-name :username username)) [:data :username])))
+
+
 (defn create-user-data [user]
     (let [username (:screen_name user)
           id (:id user)
@@ -59,26 +66,20 @@
         (nodes/add-to-index (:id user-node) index-user-name "username" (:screen_name user))
         (nodes/add-to-index (:id user-node) index-user-id "userid" (:id user))
         (println "******* New user created, node id = " (:id user-node))
-        (:id user-node)))
+        user-node))
 
 (defn get-user-node-or-create [user]
-    (let [node (nodes/find index-user-name :username (:screen_name user))] 
-      (if (empty node)
+      (if (user-name-exists (:screen_name user))
+      ;(if (false? (user-name-exists (:screen_name user)))
+        (first (nodes/find index-user-name :username (:screen_name user)))
         (create-new-user user)
-        (node)
       )
-  ))
+  )
 
 (defn delete-user-by-id [id] 
   (nodes/delete-from-index id index-user-id)
   (nodes/delete-from-index id index-user-name)
   (nodes/delete id))
-
-(defn user-id-exists [id] 
-    (not-empty (set (map :userid (nodes/find index-user-id :userid id)))) )
-
-(defn user-name-exists [username] 
-    (not-empty (set (map :userid (nodes/find index-user-name :username username)))))
 
 (defn create-new-user-from-id [id]
     (let [ user (twitter-rest/show-user 

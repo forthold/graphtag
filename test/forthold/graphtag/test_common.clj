@@ -1,7 +1,6 @@
 (ns forthold.graphtag.test-common) 
 
-(def mention {:screen_name "forthold", 
-              :text "oy @graphtag come on get it working", 
+(def mention { :text "oy @graphtag come on get it working", 
               :id "1234",
               :user {:screen_name "graphtagtest",
                      :id "1234567890",
@@ -13,3 +12,4 @@
 (def userid (:id (:user mention)))
 (def mentionid (:id mention))
 (def username (:screen_name (:user mention)))
+(def user(:user mention))
