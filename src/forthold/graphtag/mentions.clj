@@ -18,8 +18,14 @@
 ;; Create relationships between:
 ;; Mentioner --tweeted-> Mention
 (defn link-mention-and-user [mention mention-node]
-   (println "******* New Relationship from " (:screen_name (:user mention)) " to mention id: " (:id mention))
-   (relationships/create (get-user-node-or-create (:user mention)) mention-node :tweet))
+   (let [user-node (get-user-node-or-create (:user mention)) 
+         rel-node (relationships/create user-node mention-node :tweet)]
+     (println "******* New Relationship relid: " (:id rel-node)
+              " from " (:screen_name (:user mention)) 
+              " nodeid: " (:id user-node)
+              " to mention twitterid: " (:id mention) 
+              " nodeid: " (:id mention))
+     rel-node))
 
 (defn create-mention-data [mention]
     (let [username (:screen_name (:user  mention))
@@ -30,20 +36,20 @@
 ;; Create new node for mention
 (defn create-new-mention [mention]
     (let [ mention-node (nodes/create (create-mention-data mention))]
-          (println "******* New Mention" (:id mention-node))
-          (nodes/add-to-index (:id mention-node) index-mention-id "mentionid" (:id mention))
+          (println "******* Creating New Mention nodeid:" (:id mention-node))
+          (nodes/add-to-index (:id mention-node) index-mention-id index-mention-id-key (:id mention))
           (link-mention-and-user mention mention-node)
           mention-node))
 
 (defn mention-id-exists [id] 
-   (not (nil? (:id (first (nodes/find index-mention-id :mentionid id))))))
+   (not (nil? (:id (first (nodes/find index-mention-id index-mention-id-key id))))))
  
 ;; Process a mention.
 (defn mention-handler [mention] 
-   (println "*** Processing mention" (:id mention)); mention)
-   (if (not (mention-id-exists (:id mention)))
-          (create-new-mention mention)
-          (println "***** Mention " (:id mention) "already processed")))
+   (println "*** Processing mention twitterid:" (:id mention))
+   (if (mention-id-exists (:id mention))
+          (println "***** Mention twitterid:" (:id mention) "already processed")
+          (create-new-mention mention)))
 
 (defrecord MentionJob []
   org.quartz.Job

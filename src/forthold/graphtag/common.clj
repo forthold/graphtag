@@ -11,10 +11,18 @@
 
 ;; Neo4j Index constants
 (def ^:const index-user-id "userid")
-(def ^:const index-user-name "username")
-(def ^:const index-mention-id "mentionid")
-(def ^:const index-follower-id "followerid")
+(def ^:const index-user-id-key "id")
 
+(def ^:const index-user-name "username")
+(def ^:const index-user-name-key "name")
+
+(def ^:const index-mention-id "mentionid")
+(def ^:const index-mention-id-key "id")
+
+(def ^:const index-follower-id "followerid")
+(def ^:const index-follower-id-key "id")
+
+(def ^:const graphtag "GraphTag")
 ;; Define creds for twitter
 ;; TODO get this from a non source controled file
 (def ^:dynamic *creds* (oauth/make-oauth-creds "GkqZgjg4QikY4lBt1G1A9A"
@@ -41,10 +49,10 @@
       (nodes/create-index index-user-id))))
 
 (defn user-id-exists [id] 
-    (not (nil? (:id (first (nodes/find index-user-id :userid id))))))
+    (not (nil? (:id (first (nodes/find index-user-id :id id))))))
 
 (defn user-name-exists [username] 
-    (string? (get-in (first (nodes/find index-user-name :username username)) [:data :username])))
+    (string? (get-in (first (nodes/find index-user-name :name username)) [:data :username])))
 
 
 (defn create-user-data [user]
@@ -63,23 +71,10 @@
 (defn create-new-user [user]
     ;;; Create new user node to link mention to
     (let [user-node (nodes/create (create-user-data user))]
-        (nodes/add-to-index (:id user-node) index-user-name "username" (:screen_name user))
+        (nodes/add-to-index (:id user-node) index-user-name index-user-name-key (:screen_name user))
         (nodes/add-to-index (:id user-node) index-user-id "userid" (:id user))
         (println "******* New user created, node id = " (:id user-node))
         user-node))
-
-(defn get-user-node-or-create [user]
-      (if (user-name-exists (:screen_name user))
-      ;(if (false? (user-name-exists (:screen_name user)))
-        (first (nodes/find index-user-name :username (:screen_name user)))
-        (create-new-user user)
-      )
-  )
-
-(defn delete-user-by-id [id] 
-  (nodes/delete-from-index id index-user-id)
-  (nodes/delete-from-index id index-user-name)
-  (nodes/delete id))
 
 (defn create-new-user-from-id [id]
     (let [ user (twitter-rest/show-user 
@@ -88,6 +83,26 @@
                                               twitter-handlers/exception-rethrow) 
               :params {:user_id id })] 
        (create-new-user user)))
+
+(defn get-user-node-or-create [user]
+      (if (user-name-exists (:screen_name user))
+      ;(if (false? (user-name-exists (:screen_name user)))
+        (first (nodes/find index-user-name :username (:screen_name user)))
+        (create-new-user user)))
+
+(defn get-user-node-or-create-from-id [id]
+      (if (user-id-exists id)
+      ;(if (false? (user-name-exists (:screen_name user)))
+        (first (nodes/find index-user-id :id id))
+        (create-new-user-from-id id)
+      )
+  )
+
+(defn delete-user-by-id [id] 
+  (nodes/delete-from-index id index-user-id)
+  (nodes/delete-from-index id index-user-name)
+  (nodes/delete-from-index id index-follower-id)
+  (nodes/delete id))
 
 (defn get-current-iso-8601-date
   "Returns current ISO 8601 compliant date."

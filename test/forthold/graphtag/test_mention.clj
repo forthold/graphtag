@@ -1,4 +1,4 @@
-(ns forthold.graphtag.mention
+(ns forthold.graphtag.test-mention
   (:require [clojurewerkz.neocons.rest               :as neorest]
             [clojurewerkz.neocons.rest.nodes         :as nodes]
             [clojurewerkz.neocons.rest.relationships :as relationships])

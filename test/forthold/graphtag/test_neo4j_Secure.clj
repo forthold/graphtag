@@ -1,4 +1,4 @@
-(ns forthold.graphtag.neo4jSecure
+(ns forthold.graphtag.test-neo4jSecure
   (:require [clojurewerkz.neocons.rest               :as neorest]
             [clojurewerkz.neocons.rest.nodes         :as nodes]
             [clojurewerkz.neocons.rest.relationships :as relationships]

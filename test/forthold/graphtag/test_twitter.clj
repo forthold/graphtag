@@ -1,4 +1,4 @@
-(ns forthold.graphtag.twitter
+(ns forthold.graphtag.test-twitter
   (:use  [clojure.test]
          [twitter.oauth]
          [twitter.callbacks]
