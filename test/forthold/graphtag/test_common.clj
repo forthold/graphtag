@@ -13,3 +13,7 @@
 (def mentionid (:id mention))
 (def username (:screen_name (:user mention)))
 (def user(:user mention))
+
+;(def graphtag-id 491183182)
+(def graphtagtest-id 507201238)
+(def forthold-id 307693455)

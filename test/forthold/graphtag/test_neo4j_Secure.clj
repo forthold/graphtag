@@ -32,7 +32,7 @@
    ;; See if mentioner is present in user index and if not add them
    (let [ user-node  (nodes/create (create-user-data (:user mention)))
           ih  (nodes/add-to-index (:id user-node) user-name-index "username" username )
-          set-from-index (set (map :id (nodes/find user-name-index :username username)))]
+          set-from-index (set (map :id (nodes/find user-name-index index-user-name-key username)))]
         (dbg set-from-index)
         (is (not-empty set-from-index))))
 

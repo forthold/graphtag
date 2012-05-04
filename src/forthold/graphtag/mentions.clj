@@ -19,7 +19,7 @@
 ;; Mentioner --tweeted-> Mention
 (defn link-mention-and-user [mention mention-node]
    (let [user-node (get-user-node-or-create (:user mention)) 
-         rel-node (relationships/create user-node mention-node :tweet)]
+         rel-node (relationships/create user-node mention-node :tweeted)]
      (println "******* New Relationship relid: " (:id rel-node)
               " from " (:screen_name (:user mention)) 
               " nodeid: " (:id user-node)

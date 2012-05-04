@@ -37,7 +37,7 @@
   (let [missing-username "graphtagtest2222"
         user_index_name "username"
         user-node ;(try 
-                      (nodes/find index-user-name :username missing-username) 
+                      (nodes/find index-user-name index-user-name-key missing-username) 
                   ;  (catch Exception e 
                       ;(  (is e )
                       ;   (println "In Exception"))))]
@@ -51,7 +51,7 @@
   (println "Begin test-get-vs-find-node")
   (is (false? (user-name-exists username)))
   (let [created-user-id (:id (create-new-user (:user mention)))
-        find-node (nodes/find index-user-name :username username)
+        find-node (nodes/find index-user-name index-user-name-key username)
         get-node (nodes/get created-user-id)]
         (is (not-empty find-node))
         (is (not-empty get-node))
@@ -62,7 +62,7 @@
         (is (= (first (map :id  find-node)) (:id  get-node)))
         (is (= (:id (first find-node))(first (map :id  find-node)) ))
         ;(println (:id  get-node))
-        (delete-user-by-id created-user-id))
+        (delete-user-by-node-id created-user-id))
   (is (false? (user-name-exists username)))
   (println "End test-get-vs-find-node")
   )

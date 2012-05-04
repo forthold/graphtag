@@ -3,6 +3,7 @@
             [clojurewerkz.neocons.rest.nodes         :as nodes]
             [twitter.callbacks.handlers :as twitter-handlers]
             [twitter.oauth :as oauth]
+            [clojurewerkz.neocons.rest.relationships :as relationships]
             [twitter.api.restful :as twitter-rest])
   (:import [twitter.callbacks.protocols SyncSingleCallback]
            [java.util Calendar]
@@ -11,18 +12,24 @@
 
 ;; Neo4j Index constants
 (def ^:const index-user-id "userid")
-(def ^:const index-user-id-key "id")
+(def ^:const index-user-id-text "id")
+(def ^:const index-user-id-key :id)
 
 (def ^:const index-user-name "username")
-(def ^:const index-user-name-key "name")
+(def ^:const index-user-name-text "name")
+(def ^:const index-user-name-key :name)
 
 (def ^:const index-mention-id "mentionid")
-(def ^:const index-mention-id-key "id")
+(def ^:const index-mention-id-text "id")
+(def ^:const index-mention-id-key :id)
 
 (def ^:const index-follower-id "followerid")
-(def ^:const index-follower-id-key "id")
+(def ^:const index-follower-id-text "id")
+(def ^:const index-follower-id-key :id)
 
-(def ^:const graphtag "GraphTag")
+(def ^:const graphtag-screen-name "GraphTag")
+(def ^:const graphtag-id 491183182)
+
 ;; Define creds for twitter
 ;; TODO get this from a non source controled file
 (def ^:dynamic *creds* (oauth/make-oauth-creds "GkqZgjg4QikY4lBt1G1A9A"
@@ -48,11 +55,14 @@
           (= index-user-id (:name i))) list))
       (nodes/create-index index-user-id))))
 
+;;debugging parts of expressions
+(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
+
 (defn user-id-exists [id] 
-    (not (nil? (:id (first (nodes/find index-user-id :id id))))))
+    (not (nil? (:id (first (nodes/find index-user-id index-user-id-key id))))))
 
 (defn user-name-exists [username] 
-    (string? (get-in (first (nodes/find index-user-name :name username)) [:data :username])))
+    (string? (get-in (first (nodes/find index-user-name index-user-name-key username)) [:data :username])))
 
 
 (defn create-user-data [user]
@@ -71,8 +81,8 @@
 (defn create-new-user [user]
     ;;; Create new user node to link mention to
     (let [user-node (nodes/create (create-user-data user))]
-        (nodes/add-to-index (:id user-node) index-user-name index-user-name-key (:screen_name user))
-        (nodes/add-to-index (:id user-node) index-user-id "userid" (:id user))
+        (nodes/add-to-index (:id user-node) index-user-name index-user-name-text (:screen_name user))
+        (nodes/add-to-index (:id user-node) index-user-id index-user-id-text (:id user))
         (println "******* New user created, node id = " (:id user-node))
         user-node))
 
@@ -87,18 +97,27 @@
 (defn get-user-node-or-create [user]
       (if (user-name-exists (:screen_name user))
       ;(if (false? (user-name-exists (:screen_name user)))
-        (first (nodes/find index-user-name :username (:screen_name user)))
+        (first (nodes/find index-user-name index-user-name-key (:screen_name user)))
         (create-new-user user)))
 
 (defn get-user-node-or-create-from-id [id]
       (if (user-id-exists id)
       ;(if (false? (user-name-exists (:screen_name user)))
-        (first (nodes/find index-user-id :id id))
+        (first (nodes/find index-user-id index-user-id-key id))
         (create-new-user-from-id id)
       )
   )
+(defn delete-node-rels-by-id [id] 
+ (let [node (nodes/get id) 
+       rels (relationships/all-for node) ]
+   ;(dbg node)
+   ;(dbg rels)
+      (if (not-empty rels)
+         (doseq [r rels] (relationships/delete (:id r)))
+         (println "*** No relationships to delete"))))
 
-(defn delete-user-by-id [id] 
+(defn delete-user-by-node-id [id] 
+  (delete-node-rels-by-id id)
   (nodes/delete-from-index id index-user-id)
   (nodes/delete-from-index id index-user-name)
   (nodes/delete-from-index id index-follower-id)
@@ -108,6 +127,18 @@
   "Returns current ISO 8601 compliant date."
   [] (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZ") (.getTime (Calendar/getInstance))))
 
-;;debugging parts of expressions
-(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
+(def VALID-CHARS
+  (map char (concat (range 48 58) ; 0-9
+                    (range 66 91) ; A-Z
+                    (range 97 123)))) ; a-z
+
+(defn random-char []
+  (rand-nth VALID-CHARS))
+
+(defn random-str [length]
+  (apply str (take length (repeatedly random-char))))
+
+;; Gets or Creats Root GraphTag node
+(defn get-root-node [] 
+  (get-user-node-or-create-from-id graphtag-id))

@@ -36,7 +36,7 @@
   (let [ mention-node (create-new-mention mention)
          id (:id mention-node)
          ;user-node (get-user-node-or-create user)
-         user-node (first (nodes/find index-user-name :username username))
+         user-node (first (nodes/find index-user-name index-user-name-key username))
          user-node-id (:id user-node)
          user-node-returned (get-user-node-or-create user)
          rel-id (:id (first (relationships/all-for mention-node)))]
@@ -46,7 +46,7 @@
     (is (mention-id-exists mentionid))
     (is (user-name-exists username))
     (relationships/delete rel-id)
-    (delete-user-by-id user-node-id)
+    (delete-user-by-node-id user-node-id)
     (nodes/delete-from-index id index-mention-id)
     (nodes/delete id)
     ) 
@@ -59,8 +59,8 @@
   (let [ mention-node (create-new-mention mention)
         ;This creates another link to be deleted
         ;rel (link-mention-and-user mention mention-node)
-        user-node (first (nodes/find index-user-name :username username))
-        user-node2 (nodes/find index-user-name :username username)
+        user-node (first (nodes/find index-user-name index-user-name-key username))
+        user-node2 (nodes/find index-user-name index-user-name-key username)
         user-node-id (:id user-node)
         tweets (relationships/all-for mention-node) ]
     (is not-empty tweets)
@@ -69,7 +69,7 @@
     (relationships/delete (:id (first tweets)))
     (is (empty? (relationships/all-for mention-node)))
     (delete-mention-by-id (:id mention-node))
-    (delete-user-by-id user-node-id)
+    (delete-user-by-node-id user-node-id)
     (is (false? (user-name-exists username)))
     (is (false? (mention-id-exists mentionid)))))
 

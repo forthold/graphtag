@@ -59,6 +59,7 @@
   ;; TODO Set up redis with neo4j traversal of mentions and followers
   ;; Redis will hold: followers, mentions, mentioners
   (set-up-neo4j-indexes)
+  (get-root-node)
   ;start quartz
   (sched/initialize)
   (sched/start)
