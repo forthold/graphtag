@@ -111,7 +111,8 @@
  (let [node (nodes/get id) 
        rels (relationships/all-for node) ]
    ;(dbg node)
-   ;(dbg rels)
+  ; (println "asdfdsaf")
+  ; (dbg rels)
       (if (not-empty rels)
          (doseq [r rels] (relationships/delete (:id r)))
          (println "*** No relationships to delete"))))
@@ -121,6 +122,7 @@
   (nodes/delete-from-index id index-user-id)
   (nodes/delete-from-index id index-user-name)
   (nodes/delete-from-index id index-follower-id)
+  ;(delete-node-rels-by-id id)
   (nodes/delete id))
 
 (defn get-current-iso-8601-date

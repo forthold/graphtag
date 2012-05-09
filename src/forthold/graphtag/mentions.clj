@@ -9,23 +9,36 @@
   )
 
 (defn delete-mention-by-id [id]
+    ;(dbg id)
     (nodes/delete-from-index id index-mention-id)
+    (delete-node-rels-by-id id)  
     (nodes/delete id))
+    ;(nodes/destroy id))
 
 (defn get-mention-text [mention] 
    (replace-first (:text  mention) #"@graphtag" ""))
 
 ;; Create relationships between:
 ;; Mentioner --tweeted-> Mention
+;; Mwntion -mentions -> Mentionee(GraphTag)
 (defn link-mention-and-user [mention mention-node]
+   ;(dbg mention)
+   ;(dbg mention-node)
+   ;(dbg (get-root-node))
+   ;(dbg (relationships/create mention-node (get-root-node) :mentions))
    (let [user-node (get-user-node-or-create (:user mention)) 
-         rel-node (relationships/create user-node mention-node :tweeted)]
+         root-node (get-root-node) 
+         rel-node (relationships/create mention-node root-node :mentions)
+         rel-root (relationships/create user-node mention-node :tweeted)]
      (println "******* New Relationship relid: " (:id rel-node)
               " from " (:screen_name (:user mention)) 
               " nodeid: " (:id user-node)
               " to mention twitterid: " (:id mention) 
-              " nodeid: " (:id mention))
-     rel-node))
+              " nodeid: " (:id mention-node))
+     (println "******* New Relationship relid: " (:id rel-root)
+              " from mention nodeid: " (:id mention-node)
+              " to root Graphtag nodeid: " (:id root-node))
+     ))
 
 (defn create-mention-data [mention]
     (let [username (:screen_name (:user  mention))
@@ -36,6 +49,7 @@
 ;; Create new node for mention
 (defn create-new-mention [mention]
     (let [ mention-node (nodes/create (create-mention-data mention))]
+          ;(dbg mention-node)
           (println "******* Creating New Mention nodeid:" (:id mention-node))
           (nodes/add-to-index (:id mention-node) index-mention-id index-mention-id-key (:id mention))
           (link-mention-and-user mention mention-node)

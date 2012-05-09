@@ -34,7 +34,7 @@
   (is (false? (mention-id-exists mentionid)))
   (is (false? (user-name-exists username)))
   (let [ mention-node (create-new-mention mention)
-         id (:id mention-node)
+         mention-node-id (:id mention-node)
          ;user-node (get-user-node-or-create user)
          user-node (first (nodes/find index-user-name index-user-name-key username))
          user-node-id (:id user-node)
@@ -45,15 +45,16 @@
     (is rel-id)
     (is (mention-id-exists mentionid))
     (is (user-name-exists username))
-    (relationships/delete rel-id)
+    ;(relationships/delete rel-id)
     (delete-user-by-node-id user-node-id)
-    (nodes/delete-from-index id index-mention-id)
-    (nodes/delete id)
+    (nodes/delete-from-index mention-node-id index-mention-id)
+    (delete-node-rels-by-id mention-node-id)
+    (nodes/delete mention-node-id)
     ) 
   (is (false? (user-name-exists username)))
   (is (false? (mention-id-exists mentionid))))
 
-; Test that user and link are created
+;`; Test that user and link are created
 (deftest test-link-mention-and-user 
   (is (false? (user-id-exists userid)))
   (let [ mention-node (create-new-mention mention)
@@ -65,9 +66,9 @@
         tweets (relationships/all-for mention-node) ]
     (is not-empty tweets)
     (is (user-name-exists username))
-    (is (= 1 (count tweets)))
-    (relationships/delete (:id (first tweets)))
-    (is (empty? (relationships/all-for mention-node)))
+    (is (= 2 (count tweets)))
+    ;(relationships/delete (:id (first tweets)))
+    ;(is (empty? (relationships/all-for mention-node)))
     (delete-mention-by-id (:id mention-node))
     (delete-user-by-node-id user-node-id)
     (is (false? (user-name-exists username)))
