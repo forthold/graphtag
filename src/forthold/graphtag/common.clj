@@ -86,6 +86,7 @@
         (println "******* New user created, node id = " (:id user-node))
         user-node))
 
+;; Creates a new user from their Twitter id.
 (defn create-new-user-from-id [id]
     (let [ user (twitter-rest/show-user 
               :callbacks (SyncSingleCallback. twitter-handlers/response-return-body 
@@ -94,9 +95,9 @@
               :params {:user_id id })] 
        (create-new-user user)))
 
+;; Returns an existing user node or creates a new node from Twitter User.
 (defn get-user-node-or-create [user]
       (if (user-name-exists (:screen_name user))
-      ;(if (false? (user-name-exists (:screen_name user)))
         (first (nodes/find index-user-name index-user-name-key (:screen_name user)))
         (create-new-user user)))
 

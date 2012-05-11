@@ -15,9 +15,14 @@
 (defn handle-new-follower [id] 
     (let [ user-node (get-user-node-or-create-from-id id)
            root (get-root-node) ]
-      (println "**** Processing Follower nodeid " (:id user-node) " root nodeid: " (:id root))
+      (println "**** Processing Follower twitterid: " id " nodeid " (:id user-node) " root nodeid: " (:id root))
+      ; Follow the user
+      (twitter-rest/create-friendship :oauth-creds *creds*
+                                      :params {:user_id id })
+      ; Send a DM
       (twitter-rest/send-direct-message :oauth-creds *creds*
                                         :params {:user_id id :text (create-message-text id)})
+
       (nodes/add-to-index (:id user-node) index-follower-id index-follower-id-text id)
       (relationships/create user-node root :follows)
       user-node))
