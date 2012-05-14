@@ -27,6 +27,10 @@
 (def ^:const index-follower-id-text "id")
 (def ^:const index-follower-id-key :id)
 
+(def ^:const index-dm-id "messageid")
+(def ^:const index-dm-id-text "id")
+(def ^:const index-dm-id-key :id)
+
 (def ^:const graphtag-screen-name "GraphTag")
 (def ^:const graphtag-id 491183182)
 
@@ -46,6 +50,9 @@
       (if (not (some (fn [i]
           (= index-follower-id (:name i))) list))
       (nodes/create-index index-follower-id))
+
+      (if (not (some (fn [i] (= index-dm-id (:name i))) list))
+      (nodes/create-index index-dm-id))
 
       (if (not (some (fn [i]
           (= index-mention-id (:name i))) list))

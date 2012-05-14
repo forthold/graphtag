@@ -4,6 +4,7 @@
   (:use  [clojurewerkz.quartzite.conversion]
          [forthold.graphtag.common]
          [forthold.graphtag.followers]
+         [forthold.graphtag.direct]
          [forthold.graphtag.mentions])
   (:require [noir.server :as server]
             [clojurewerkz.quartzite.scheduler :as sched]
@@ -21,7 +22,11 @@
                  (j/with-identity "forthold.graphtab.server.mention" "processMentions"))
         follow-job     (j/build
                  (j/of-type forthold.graphtag.followers.FollowJob)
-                 (j/with-identity "forthold.graphtab.smentionserver.follow" "processFollows"))
+                 (j/with-identity "forthold.graphtab.follow" "processFollows"))
+        message-job     (j/build
+                 (j/of-type forthold.graphtag.direct.MessageJob)
+                 (j/with-identity "forthold.graphtab.direct" "processMessages"))
+
         mention-trigger  (t/build
                   (t/start-now)
                   (t/with-schedule (s/schedule
@@ -31,9 +36,16 @@
                   (t/start-now)
                   (t/with-schedule (s/schedule
                                     (s/repeat-forever)
+                                    (s/with-interval-in-minutes 3))))
+       message-trigger  (t/build
+                  (t/start-now)
+                  (t/with-schedule (s/schedule
+                                    (s/repeat-forever)
                                     (s/with-interval-in-minutes 3))))]
+
     (sched/schedule mention-job mention-trigger)
-    (sched/schedule follow-job follow-trigger)))
+    (sched/schedule follow-job follow-trigger)
+    (sched/schedule message-job message-trigger)))
 
 
 (defn -main [& m]
