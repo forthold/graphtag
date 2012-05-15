@@ -14,6 +14,18 @@
 (def username (:screen_name (:user mention)))
 (def user(:user mention))
 
+
+(def message {:id 200865282179334144,
+              :text "Hey heres a little test DMidf" , 
+              :sender {:name "Aran Elkington", :id 307693455 ,:screen_name "forthold"},
+              :recipient { :name "Graph Tag",:id 491183182 ,:screen_name "GraphTag"}}
+)
+
+(def message-with-dsl {:id 200865282179334144,
+              :text "Hey heres a little test DMidf @GraphTag (maths science port)", 
+              :sender {:name "Aran Elkington", :id 307693455 ,:screen_name "forthold"},
+              :recipient { :name "Graph Tag",:id 491183182 ,:screen_name "GraphTag"}}
+)
 ;(def graphtag-id 491183182)
 (def graphtagtest-id 507201238)
 (def forthold-id 307693455)

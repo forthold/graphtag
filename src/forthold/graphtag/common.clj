@@ -27,6 +27,10 @@
 (def ^:const index-follower-id-text "id")
 (def ^:const index-follower-id-key :id)
 
+(def ^:const index-tag-name "tag")
+(def ^:const index-tag-name-key :tag)
+(def ^:const index-tag-name-text "tag")
+
 (def ^:const index-dm-id "messageid")
 (def ^:const index-dm-id-text "id")
 (def ^:const index-dm-id-key :id)
@@ -51,12 +55,17 @@
           (= index-follower-id (:name i))) list))
       (nodes/create-index index-follower-id))
 
-      (if (not (some (fn [i] (= index-dm-id (:name i))) list))
+      (if (not (some (fn [i] 
+           (= index-dm-id (:name i))) list))
       (nodes/create-index index-dm-id))
 
       (if (not (some (fn [i]
           (= index-mention-id (:name i))) list))
       (nodes/create-index index-mention-id))
+      
+      (if (not (some (fn [i]
+          (= index-tag-name (:name i))) list))
+      (nodes/create-index index-tag-name))
 
       (if (not (some (fn [i]
           (= index-user-id (:name i))) list))
@@ -148,6 +157,9 @@
 
 (defn random-str [length]
   (apply str (take length (repeatedly random-char))))
+
+(defn first-match [m]
+   (if (coll? m) (first m) m)) 
 
 ;; Gets or Creats Root GraphTag node
 (defn get-root-node [] 
