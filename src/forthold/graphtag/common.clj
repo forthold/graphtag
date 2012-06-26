@@ -99,7 +99,7 @@
     (let [user-node (nodes/create (create-user-data user))]
         (nodes/add-to-index (:id user-node) index-user-name index-user-name-text (:screen_name user))
         (nodes/add-to-index (:id user-node) index-user-id index-user-id-text (:id user))
-        (println "******* New user created, node id = " (:id user-node))
+        (println "**** New user created, node id = " (:id user-node))
         user-node))
 
 ;; Creates a new user from their Twitter id.
